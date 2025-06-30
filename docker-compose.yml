@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   nginx:
     build:
@@ -32,3 +30,29 @@ services:
     environment:
       - DEBUG=1
       - ALLOWED_HOSTS=localhost,127.0.0.1,nginx
+      - DB_HOST=db
+      - DB_NAME=terratest_db
+      - DB_USER=terratest_user
+      - DB_PASSWORD=terratest_password
+      - DB_PORT=5432
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=terratest_db
+      - POSTGRES_USER=terratest_user
+      - POSTGRES_PASSWORD=terratest_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+
+volumes:
+  postgres_data:

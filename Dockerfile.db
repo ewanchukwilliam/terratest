@@ -1,0 +1,16 @@
+FROM postgres:16-alpine
+
+# Set environment variables
+ENV POSTGRES_DB=terratest_db
+ENV POSTGRES_USER=terratest_user
+ENV POSTGRES_PASSWORD=terratest_password
+
+# Create additional databases if needed
+COPY docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
+
+# Expose PostgreSQL port
+EXPOSE 5432
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=5 \
+  CMD pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || exit 1
